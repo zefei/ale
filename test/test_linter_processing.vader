@@ -1,0 +1,174 @@
+Before:
+  let g:linter = {}
+
+After:
+  unlet g:linter
+
+Execute(ALE should complain when a linter has no name):
+  AssertThrows call ale#linter#PreProcess(g:linter)
+  AssertEqual '`name` must be defined to name the linter', g:vader_exception
+
+Execute(ALE should complain when the name attribute isn't a String):
+  let g:linter = {'name': 347}
+  AssertThrows call ale#linter#PreProcess(g:linter)
+  AssertEqual '`name` must be defined to name the linter', g:vader_exception
+
+Execute(ALE should complain when a linter has no callback):
+  let g:linter = {'name': 'x'}
+  AssertThrows call ale#linter#PreProcess(g:linter)
+  AssertEqual '`callback` must be defined with a callback to accept output', g:vader_exception
+
+Execute(ALE should complain when there is no executable):
+  let g:linter = {'name': 'x', 'callback': 'foo'}
+  AssertThrows call ale#linter#PreProcess(g:linter)
+  AssertEqual 'Either `executable` or `executable_callback` must be defined', g:vader_exception
+
+Execute(ALE should complain when there is no command):
+  let g:linter = {'name': 'x', 'callback': 'foo', 'executable': 'x'}
+  AssertThrows call ale#linter#PreProcess(g:linter)
+  AssertEqual 'Either `command`, `executable_callback`, `command_chain` must be defined', g:vader_exception
+
+Execute(ALE should accept the bare minimum):
+  let g:linter = {'name': 'x', 'callback': 'x', 'executable': 'x', 'command': 'x'}
+  call ale#linter#PreProcess(g:linter)
+
+Execute(ALE should accept a command callback):
+  let g:linter = {
+  \ 'name': 'x',
+  \ 'callback': 'x',
+  \ 'executable': 'x',
+  \ 'command_callback': 'x',
+  \}
+  call ale#linter#PreProcess(g:linter)
+
+Execute(ALE should accept an executable callback):
+  let g:linter = {
+  \ 'name': 'x',
+  \ 'callback': 'x',
+  \ 'executable_callback': 'x',
+  \ 'command': 'x',
+  \}
+  call ale#linter#PreProcess(g:linter)
+
+Execute(ALE should complain about invalid output_stream values):
+  let g:linter = {
+  \ 'name': 'x',
+  \ 'callback': 'x',
+  \ 'executable': 'x',
+  \ 'command': 'x',
+  \ 'output_stream': 'xyz',
+  \}
+  AssertThrows call ale#linter#PreProcess(g:linter)
+  AssertEqual "`output_stream` must be 'stdout', 'stderr', or 'both'", g:vader_exception
+
+Execute(ALE should accept 'stdout' for the output_stream value):
+  let g:linter = {
+  \ 'name': 'x',
+  \ 'callback': 'x',
+  \ 'executable': 'x',
+  \ 'command': 'x',
+  \ 'output_stream': 'stdout',
+  \}
+  call ale#linter#PreProcess(g:linter)
+
+Execute(ALE should accept 'stderr' for the output_stream value):
+  let g:linter = {
+  \ 'name': 'x',
+  \ 'callback': 'x',
+  \ 'executable': 'x',
+  \ 'command': 'x',
+  \ 'output_stream': 'stderr',
+  \}
+  call ale#linter#PreProcess(g:linter)
+
+Execute(ALE should accept 'both' for the output_stream value):
+  let g:linter = {
+  \ 'name': 'x',
+  \ 'callback': 'x',
+  \ 'executable': 'x',
+  \ 'command': 'x',
+  \ 'output_stream': 'both',
+  \}
+  call ale#linter#PreProcess(g:linter)
+
+Execute(ALE should complain if the command_chain is not a List):
+  let g:linter = {
+  \ 'name': 'x',
+  \ 'callback': 'x',
+  \ 'executable': 'x',
+  \ 'command_chain': 'x',
+  \}
+  AssertThrows call ale#linter#PreProcess(g:linter)
+  AssertEqual '`command_chain` must be a List', g:vader_exception
+
+Execute(ALE should complain if the command_chain is empty):
+  let g:linter = {
+  \ 'name': 'x',
+  \ 'callback': 'x',
+  \ 'executable': 'x',
+  \ 'command_chain': [],
+  \}
+  AssertThrows call ale#linter#PreProcess(g:linter)
+  AssertEqual '`command_chain` must contain at least one item', g:vader_exception
+
+Execute(ALE should complain if the command_chain has no callback):
+  let g:linter = {
+  \ 'name': 'x',
+  \ 'callback': 'x',
+  \ 'executable': 'x',
+  \ 'command_chain': [{}],
+  \}
+  AssertThrows call ale#linter#PreProcess(g:linter)
+  AssertEqual 'The `command_chain` item 0 must define a `callback` function', g:vader_exception
+
+Execute(ALE should complain if the command_chain callback is not a function):
+  let g:linter = {
+  \ 'name': 'x',
+  \ 'callback': 'x',
+  \ 'executable': 'x',
+  \ 'command_chain': [{'callback': 2}],
+  \}
+  AssertThrows call ale#linter#PreProcess(g:linter)
+  AssertEqual 'The `command_chain` item 0 must define a `callback` function', g:vader_exception
+
+Execute(ALE should accept a chain with one callback):
+  let g:linter = {
+  \ 'name': 'x',
+  \ 'callback': 'x',
+  \ 'executable': 'x',
+  \ 'command_chain': [{'callback': 'foo'}],
+  \}
+  call ale#linter#PreProcess(g:linter)
+
+Execute(ALE should complain about invalid output_stream values in the chain):
+  let g:linter = {
+  \ 'name': 'x',
+  \ 'callback': 'x',
+  \ 'executable': 'x',
+  \ 'command_chain': [{'callback': 'foo', 'output_stream': ''}],
+  \}
+  AssertThrows call ale#linter#PreProcess(g:linter)
+  AssertEqual "The `command_chain` item 0 `output_stream` flag must be 'stdout', 'stderr', or 'both'", g:vader_exception
+
+Execute(ALE should complain about valid output_stream values in the chain):
+  let g:linter = {
+  \ 'name': 'x',
+  \ 'callback': 'x',
+  \ 'executable': 'x',
+  \ 'command_chain': [{'callback': 'foo', 'output_stream': 'stdout'}],
+  \}
+  call ale#linter#PreProcess(g:linter)
+  let g:linter.command_chain[0].output_stream = 'stderr'
+  call ale#linter#PreProcess(g:linter)
+  let g:linter.command_chain[0].output_stream = 'both'
+  call ale#linter#PreProcess(g:linter)
+
+Execute(ALE should complain about invalid chain items at higher indices):
+  let g:linter = {
+  \ 'name': 'x',
+  \ 'callback': 'x',
+  \ 'executable': 'x',
+  \ 'command_chain': [{'callback': 'foo'}, {'callback': 123}],
+  \}
+  AssertThrows call ale#linter#PreProcess(g:linter)
+  AssertEqual 'The `command_chain` item 1 must define a `callback` function', g:vader_exception
